@@ -23,8 +23,7 @@ const downloadStatus = document.querySelector("#download-status");
 const zipButton = document.querySelector("#download-zip");
 const photoCount = document.querySelector("#photo-count");
 const publication = document.querySelector("#publication");
-const emptyGallery = document.querySelector("#empty-gallery");
-const emptyText = document.querySelector("#empty-text");
+const results = document.querySelector("#results");
 const gallery = document.querySelector("#photo-gallery");
 let activeCarousel;
 
@@ -153,7 +152,7 @@ async function downloadPhoto(photo, button, signal) {
       announce(downloadStatus, error.message, true);
     }
   } finally {
-    button.textContent = "Descargar ↓";
+    button.textContent = "Descargar";
     button.disabled = false;
   }
 }
@@ -185,7 +184,7 @@ function buildPhotoCard(photo, signal) {
   const button = document.createElement("button");
   button.type = "button";
   button.className = "button button-photo";
-  button.textContent = "Descargar ↓";
+  button.textContent = "Descargar";
   button.setAttribute("aria-label", `Descargar foto ${photo.number}`);
   button.addEventListener("click", () => downloadPhoto(photo, button, signal));
   controls.append(label, button);
@@ -198,8 +197,7 @@ function showCarousel({ photos, author, link, controller }) {
   photoCount.textContent = `${photos.length} ${photos.length === 1 ? "foto" : "fotos"}`;
   publication.href = link;
   publication.textContent = author ? `@${author} en TikTok` : "Ver en TikTok";
-  emptyGallery.hidden = true;
-  gallery.hidden = publication.hidden = photoCount.hidden = zipButton.hidden = false;
+  results.hidden = false;
   zipButton.disabled = false;
 }
 
@@ -242,9 +240,7 @@ form.addEventListener("submit", async (event) => {
   activeCarousel?.controller.abort();
   activeCarousel = undefined;
   gallery.replaceChildren();
-  gallery.hidden = publication.hidden = photoCount.hidden = zipButton.hidden = true;
-  emptyGallery.hidden = false;
-  emptyText.textContent = "Buscando las fotos del carrusel…";
+  results.hidden = true;
   loadButton.disabled = true;
   loadLabel.textContent = "Cargando fotos…";
   input.removeAttribute("aria-invalid");
@@ -255,12 +251,11 @@ form.addEventListener("submit", async (event) => {
     const data = await loadCarousel(link, controller.signal);
     activeCarousel = { ...data, link, controller };
     showCarousel(activeCarousel);
-    announce(formStatus, data.photos.length === 1 ? "Se encontró 1 foto." : `Se encontraron ${data.photos.length} fotos.`);
+    announce(formStatus);
   } catch (error) {
     const connectionError = error instanceof TypeError || error.name === "TimeoutError" || error instanceof SyntaxError;
     const message = connectionError ? "No se pudo consultar TikWM. Inténtalo de nuevo." : error.message;
     announce(formStatus, message, true);
-    emptyText.textContent = "Las fotos del carrusel aparecerán aquí.";
   } finally {
     loadButton.disabled = false;
     loadLabel.textContent = "Cargar fotos";
@@ -290,7 +285,7 @@ zipButton.addEventListener("click", async () => {
     }
     const blob = await zip.generateAsync({ type: "blob", compression: "STORE" });
     if (!signal.aborted) {
-      saveFile(blob, id ? `tikstash-${id}.zip` : "tikstash.zip");
+      saveFile(blob, id ? `frametok-${id}.zip` : "frametok.zip");
       announce(downloadStatus, "ZIP listo para descargar.");
     }
   } catch (error) {

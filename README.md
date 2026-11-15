@@ -1,8 +1,8 @@
-# TikStash
+# FrameTok
 
 Pega el enlace de una publicación pública de fotos de TikTok para ver las imágenes en orden. Puedes guardar cada foto o descargar todo en un ZIP, con los archivos numerados y en el formato que entrega el servidor.
 
-[Abrir TikStash](https://codebydante.github.io/tikstash/)
+[Abrir FrameTok](https://codebydante.github.io/frametok/)
 
 ## Ejecutar en local
 
@@ -18,4 +18,4 @@ La interfaz envía a la [API pública de TikWM](https://www.tikwm.com/) el enlac
 
 Puedes probar con [este carrusel público de siete fotos](https://www.tiktok.com/@adventurers00/photo/7684712891978665249).
 
-JSZip y Geist conservan sus licencias en `vendor/JSZip-LICENSE.markdown` y `assets/Geist-OFL.txt`.
+JSZip e IBM Plex Mono conservan sus licencias en `vendor/JSZip-LICENSE.markdown` y `assets/IBM-Plex-Mono-OFL.txt`.
