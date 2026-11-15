@@ -2,7 +2,7 @@
 
 Pega el enlace de una publicación pública de fotos de TikTok para ver las imágenes en orden. Puedes guardar cada foto o descargar todo en un ZIP, con los archivos numerados y en el formato que entrega el servidor.
 
-[Abrir Frametok](https://codebydante.github.io/frametok/)
+[Abrir Frametok](https://codebydante.github.io/Frametok/)
 
 ## Ejecutar en local
 

@@ -5,7 +5,7 @@
 <h3 align="center">Frametok</h3>
 
 <p align="center">
-  <a href="https://codebydante.github.io/frametok/">
+  <a href="https://codebydante.github.io/Frametok/">
     <img src="readme-button.svg" width="280" alt="ABRIR FRAMETOK">
   </a>
 </p>
