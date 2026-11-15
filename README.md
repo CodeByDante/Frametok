@@ -1,8 +1,8 @@
-# Carrusel TikTok
+# TikStash
 
 Pega el enlace de una publicación pública de fotos de TikTok para ver las imágenes en orden. Puedes guardar cada foto o descargar todo en un ZIP, con los archivos numerados y en el formato que entrega el servidor.
 
-[Abrir Carrusel TikTok](https://codebydante.github.io/carrusel-tiktok/)
+[Abrir TikStash](https://codebydante.github.io/tikstash/)
 
 ## Ejecutar en local
 

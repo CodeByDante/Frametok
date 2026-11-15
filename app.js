@@ -290,7 +290,7 @@ zipButton.addEventListener("click", async () => {
     }
     const blob = await zip.generateAsync({ type: "blob", compression: "STORE" });
     if (!signal.aborted) {
-      saveFile(blob, id ? `carrusel-tiktok-${id}.zip` : "carrusel-tiktok.zip");
+      saveFile(blob, id ? `tikstash-${id}.zip` : "tikstash.zip");
       announce(downloadStatus, "ZIP listo para descargar.");
     }
   } catch (error) {
