@@ -197,7 +197,7 @@ function showCarousel({ photos, author, link, controller }) {
   gallery.replaceChildren(...photos.map((photo) => buildPhotoCard(photo, controller.signal)));
   photoCount.textContent = `${photos.length} ${photos.length === 1 ? "foto" : "fotos"}`;
   publication.href = link;
-  publication.textContent = author ? `@${author} en TikTok ↗` : "Ver en TikTok ↗";
+  publication.textContent = author ? `@${author} en TikTok` : "Ver en TikTok";
   emptyGallery.hidden = true;
   gallery.hidden = publication.hidden = photoCount.hidden = zipButton.hidden = false;
   zipButton.disabled = false;

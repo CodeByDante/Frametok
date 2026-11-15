@@ -83,7 +83,7 @@ h1, h2, p { margin: 0; }
 }
 
 .repository:hover { background: var(--control); }
-.repository > span { color: var(--muted); }
+.repository > span { color: var(--muted); transform: rotate(-45deg); }
 
 .intro {
   display: flex;
