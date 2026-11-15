@@ -10,4 +10,4 @@
   </a>
 </p>
 
-**Frametok** es una herramienta para descargar las fotos de publicaciones públicas de TikTok. Pega el enlace de un carrusel, revisa sus imágenes en orden y guarda cada foto por separado o descarga todas juntas en un archivo ZIP.
+**Frametok** es una herramienta para descargar las fotos de publicaciones públicas de TikTok. Pega el enlace de un carrusel, revisa sus imágenes en orden y guarda cada foto por separado o descarga todas juntas en un archivo ZIP. Si el carrusel tiene audio disponible, puedes escucharlo y descargarlo por separado.

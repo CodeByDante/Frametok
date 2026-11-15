@@ -7,9 +7,9 @@
   <meta name="theme-color" content="#090909">
   <title>Frametok · Fotos de TikTok</title>
   <link rel="icon" href="./assets/frametok.png" type="image/png">
-  <link rel="stylesheet" href="./styles.css?v=6">
+  <link rel="stylesheet" href="./styles.css?v=7">
   <script defer src="./vendor/jszip.min.js"></script>
-  <script defer src="./app.js?v=2"></script>
+  <script defer src="./app.js?v=3"></script>
 </head>
 <body>
   <main class="page" aria-labelledby="page-title">
@@ -46,8 +46,12 @@
           </div>
           <a class="publication" id="publication" target="_blank" rel="noreferrer"></a>
         </div>
-        <button type="button" class="button button-zip" id="download-zip">Descargar todo en ZIP</button>
+        <div class="download-actions">
+          <button type="button" class="button" id="download-audio" hidden>Descargar audio</button>
+          <button type="button" class="button button-zip" id="download-zip">Descargar fotos en ZIP</button>
+        </div>
       </div>
+      <audio id="audio-player" class="audio-player" aria-label="Reproductor del audio del carrusel" controls controlslist="nodownload" crossorigin="anonymous" preload="none" hidden></audio>
       <p class="status" id="download-status" role="status" hidden></p>
       <ul class="gallery" id="photo-gallery" aria-label="Fotos en el orden de la publicación"></ul>
     </section>
