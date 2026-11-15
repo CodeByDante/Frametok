@@ -7,9 +7,9 @@
   <meta name="theme-color" content="#090909">
   <title>Frametok · Fotos de TikTok</title>
   <link rel="icon" href="./assets/frametok.png" type="image/png">
-  <link rel="stylesheet" href="./styles.css?v=5">
+  <link rel="stylesheet" href="./styles.css?v=6">
   <script defer src="./vendor/jszip.min.js"></script>
-  <script defer src="./app.js"></script>
+  <script defer src="./app.js?v=2"></script>
 </head>
 <body>
   <main class="page" aria-labelledby="page-title">
@@ -29,16 +29,12 @@
           <label class="visually-hidden" for="post-link">Enlace del carrusel</label>
           <input id="post-link" name="url" type="text" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="https://www.tiktok.com/@usuario/photo/…" aria-describedby="form-status link-help" required>
           <div class="form-actions">
-            <button type="submit" class="button button-primary" id="load-photos"><span>Cargar fotos</span></button>
+            <button type="submit" class="button button-primary" id="load-photos"><span>Descargar</span></button>
             <button type="button" class="button" id="paste-link">Pegar enlace</button>
           </div>
           <p class="status" id="form-status" role="status" hidden></p>
         </form>
       </section>
-
-      <p class="source-note">
-        Consulta de enlaces con <a href="https://www.tikwm.com/" target="_blank" rel="noreferrer">TikWM</a>. El ZIP se crea en tu navegador.
-      </p>
     </div>
 
     <section class="results" id="results" aria-labelledby="gallery-title" hidden>

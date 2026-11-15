@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/frametok.png" width="160" alt="Logo de Frametok">
+  <img src="assets/frametok-logo.png" width="160" alt="Logo de Frametok">
 </p>
 
 <h3 align="center">Frametok</h3>

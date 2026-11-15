@@ -198,14 +198,6 @@ h1 {
 
 .status[data-error="true"] { color: #e9b1a6; }
 
-.source-note {
-  margin-top: 19px;
-  color: var(--muted);
-  font-size: .76rem;
-  line-height: 1.55;
-  text-align: center;
-}
-
 .results {
   margin-bottom: 40px;
   padding: clamp(14px, 3.4vw, 23px);

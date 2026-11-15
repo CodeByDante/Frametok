@@ -242,7 +242,7 @@ form.addEventListener("submit", async (event) => {
   gallery.replaceChildren();
   results.hidden = true;
   loadButton.disabled = true;
-  loadLabel.textContent = "Cargando fotos…";
+  loadLabel.textContent = "Preparando fotos…";
   input.removeAttribute("aria-invalid");
   announce(formStatus, "Consultando la publicación…");
   announce(downloadStatus);
@@ -258,7 +258,7 @@ form.addEventListener("submit", async (event) => {
     announce(formStatus, message, true);
   } finally {
     loadButton.disabled = false;
-    loadLabel.textContent = "Cargar fotos";
+    loadLabel.textContent = "Descargar";
   }
 });
 
