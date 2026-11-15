@@ -7,9 +7,9 @@
   <meta name="theme-color" content="#090909">
   <title>TikTok FlowLoad</title>
   <link rel="icon" href="./assets/frametok.png" type="image/png">
-  <link rel="stylesheet" href="./styles.css?v=8">
+  <link rel="stylesheet" href="./styles.css?v=9">
   <script defer src="./vendor/jszip.min.js"></script>
-  <script defer src="./app.js?v=4"></script>
+  <script defer src="./app.js?v=5"></script>
 </head>
 <body>
   <main class="page" aria-labelledby="page-title">
@@ -46,15 +46,20 @@
           <a class="publication" id="publication" target="_blank" rel="noreferrer"></a>
         </div>
         <div class="download-actions" id="carousel-actions">
-          <button type="button" class="button" id="download-audio" hidden>Descargar audio</button>
           <button type="button" class="button button-zip" id="download-zip">Descargar fotos en ZIP</button>
         </div>
-        <div class="download-actions" id="video-actions" hidden>
-          <button type="button" class="button" id="download-mp4">Descargar MP4</button>
+      </div>
+      <div class="carousel-audio" id="carousel-audio" hidden>
+        <audio id="audio-player" class="audio-player" aria-label="Reproductor del audio del carrusel" controls controlslist="nodownload" crossorigin="anonymous" preload="none"></audio>
+        <button type="button" class="button" id="download-audio">Descargar audio</button>
+      </div>
+      <div class="video-panel" id="video-panel" hidden>
+        <video id="video-player" class="video-preview" aria-label="Vista previa del video de TikTok" controls controlslist="nodownload" playsinline crossorigin="anonymous" preload="metadata"></video>
+        <div class="download-actions" id="video-actions">
           <button type="button" class="button" id="download-mp3">Descargar MP3</button>
+          <button type="button" class="button" id="download-mp4">Descargar MP4</button>
         </div>
       </div>
-      <audio id="audio-player" class="audio-player" aria-label="Reproductor del audio del carrusel" controls controlslist="nodownload" crossorigin="anonymous" preload="none" hidden></audio>
       <p class="status" id="download-status" role="status" hidden></p>
       <ul class="gallery" id="photo-gallery" aria-label="Fotos en el orden de la publicación"></ul>
     </section>

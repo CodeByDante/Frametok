@@ -27,7 +27,11 @@ const VIDEO_EXTENSIONS = new Map([
   ["video/mp4", "mp4"],
   ["application/mp4", "mp4"],
 ]);
+const VIDEO_FILENAME_BYTES = 120;
+const WINDOWS_DEVICE_NAME = /^(?:con|prn|aux|nul|com[0-9¹²³]|lpt[0-9¹²³]|conin\$|conout\$)\s*(?:\.|$)/i;
 
+const page = document.querySelector(".page");
+const stage = document.querySelector(".stage");
 const form = document.querySelector("#link-form");
 const input = document.querySelector("#post-link");
 const pasteButton = document.querySelector("#paste-link");
@@ -37,11 +41,13 @@ const formStatus = document.querySelector("#form-status");
 const downloadStatus = document.querySelector("#download-status");
 const audioButton = document.querySelector("#download-audio");
 const audioPlayer = document.querySelector("#audio-player");
+const carouselAudio = document.querySelector("#carousel-audio");
 const zipButton = document.querySelector("#download-zip");
 const mp4Button = document.querySelector("#download-mp4");
 const mp3Button = document.querySelector("#download-mp3");
 const carouselActions = document.querySelector("#carousel-actions");
-const videoActions = document.querySelector("#video-actions");
+const videoPanel = document.querySelector("#video-panel");
+const videoPlayer = document.querySelector("#video-player");
 const photoCount = document.querySelector("#photo-count");
 const galleryTitle = document.querySelector("#gallery-title");
 const publication = document.querySelector("#publication");
@@ -105,6 +111,28 @@ function getMediaLinks(...links) {
   return [...new Set(links.map(getMediaLink).filter(Boolean))];
 }
 
+function safeFileStem(value) {
+  if (typeof value !== "string") {
+    return "";
+  }
+  const cleaned = value.normalize("NFC")
+    .replace(/[<>:"/\\|?*\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]+/g, "-")
+    .replace(/\s+/g, " ")
+    .replace(/^[ .-]+|[ .-]+$/g, "");
+  const stem = WINDOWS_DEVICE_NAME.test(cleaned) ? `_${cleaned}` : cleaned;
+  const encoder = new TextEncoder();
+  let size = 0;
+  let name = "";
+  for (const character of stem) {
+    size += encoder.encode(character).length;
+    if (size > VIDEO_FILENAME_BYTES) {
+      break;
+    }
+    name += character;
+  }
+  return name.replace(/[ .-]+$/g, "");
+}
+
 function request(url, signal, timeout) {
   return fetch(url, {
     credentials: "omit",
@@ -127,7 +155,9 @@ async function loadPublication(link, signal) {
   if (payload.code !== 0 || !payload.data) {
     throw new Error("No se encontró la publicación. Comprueba que el enlace abra un carrusel o video público.");
   }
-  const { images, author, id, music, music_info: musicInfo, play, wmplay } = payload.data;
+  const {
+    images, author, id, title, music, music_info: musicInfo, play, wmplay, cover, origin_cover: originCover,
+  } = payload.data;
   const details = {
     id: /^\d+$/.test(String(id)) ? String(id) : "",
     author: typeof author?.unique_id === "string" ? author.unique_id : "",
@@ -146,7 +176,10 @@ async function loadPublication(link, signal) {
 
   const videoLinks = getMediaLinks(play, wmplay);
   if (videoLinks.length > 0) {
-    return { ...details, type: "video", videoLinks };
+    const poster = getMediaLink(cover) ?? getMediaLink(originCover);
+    const { hostname, pathname } = new URL(link);
+    const downloadName = safeFileStem(title) || safeFileStem(hostname + pathname);
+    return { ...details, type: "video", videoLinks, poster, downloadName };
   }
 
   throw new Error("No se pudo obtener el contenido de esta publicación. Vuelve a cargarla o prueba otro enlace.");
@@ -289,9 +322,10 @@ async function downloadPhoto(photo, button, signal) {
   }
 }
 
-function buildPhotoCard(photo, signal) {
+function buildPhotoCard(photo, signal, index) {
   const card = document.createElement("li");
   card.className = "photo-card";
+  card.style.setProperty("--reveal-delay", `${220 + Math.min(index, 10) * 45}ms`);
   const preview = document.createElement("div");
   preview.className = "photo-preview";
   const image = new Image();
@@ -324,20 +358,31 @@ function buildPhotoCard(photo, signal) {
   return card;
 }
 
+function setPlayerSources(player, links) {
+  player.replaceChildren(...links.map((link) => {
+    const source = document.createElement("source");
+    source.src = link;
+    return source;
+  }));
+  player.load();
+}
+
+function resetPlayer(player, panel) {
+  if (!panel.hidden) {
+    player.pause();
+    setPlayerSources(player, []);
+    panel.hidden = true;
+  }
+}
+
 function showCarousel({ photos, audioLinks, controller }) {
-  gallery.replaceChildren(...photos.map((photo) => buildPhotoCard(photo, controller.signal)));
+  gallery.replaceChildren(...photos.map((photo, index) => buildPhotoCard(photo, controller.signal, index)));
   photoCount.textContent = `${photos.length} ${photos.length === 1 ? "foto" : "fotos"}`;
   const hasAudio = audioLinks.length > 0;
-  audioButton.hidden = !hasAudio;
+  carouselAudio.hidden = !hasAudio;
   audioButton.disabled = false;
-  audioPlayer.hidden = !hasAudio;
   if (hasAudio) {
-    audioPlayer.replaceChildren(...audioLinks.map((link) => {
-      const source = document.createElement("source");
-      source.src = link;
-      return source;
-    }));
-    audioPlayer.load();
+    setPlayerSources(audioPlayer, audioLinks);
   }
   zipButton.disabled = false;
 }
@@ -347,13 +392,17 @@ function showPublication(data) {
   galleryTitle.textContent = isCarousel ? "Fotos del carrusel" : "Video de TikTok";
   photoCount.hidden = !isCarousel;
   carouselActions.hidden = !isCarousel;
-  videoActions.hidden = isCarousel;
   gallery.hidden = !isCarousel;
   publication.href = data.link;
   publication.textContent = data.author ? `@${data.author} en TikTok` : "Ver en TikTok";
   if (isCarousel) {
     showCarousel(data);
   } else {
+    if (data.poster) {
+      videoPlayer.poster = data.poster;
+    }
+    setPlayerSources(videoPlayer, data.videoLinks);
+    videoPanel.hidden = false;
     mp4Button.disabled = false;
     mp3Button.disabled = false;
   }
@@ -398,12 +447,9 @@ form.addEventListener("submit", async (event) => {
 
   activePublication?.controller.abort();
   activePublication = undefined;
-  if (!audioPlayer.hidden) {
-    audioPlayer.pause();
-    audioPlayer.replaceChildren();
-    audioPlayer.load();
-    audioPlayer.hidden = true;
-  }
+  resetPlayer(audioPlayer, carouselAudio);
+  resetPlayer(videoPlayer, videoPanel);
+  videoPlayer.removeAttribute("poster");
   gallery.replaceChildren();
   results.hidden = true;
   loadButton.disabled = true;
@@ -411,13 +457,16 @@ form.addEventListener("submit", async (event) => {
   input.removeAttribute("aria-invalid");
   announce(formStatus, "Consultando la publicación…");
   announce(downloadStatus);
+  page.classList.add("results-open");
   const controller = new AbortController();
   try {
-    const data = await loadPublication(link, controller.signal);
+    const movement = stage.getAnimations?.().find((animation) => animation.transitionProperty === "min-height");
+    const [data] = await Promise.all([loadPublication(link, controller.signal), movement?.finished.catch(() => {})]);
     activePublication = { ...data, link, controller };
     showPublication(activePublication);
     announce(formStatus);
   } catch (error) {
+    page.classList.remove("results-open");
     const connectionError = error instanceof TypeError || error.name === "TimeoutError" || error instanceof SyntaxError;
     const message = connectionError ? "No se pudo consultar TikWM. Inténtalo de nuevo." : error.message;
     announce(formStatus, message, true);
@@ -461,7 +510,7 @@ async function downloadVideo(format, button) {
   if (video?.type !== "video" || button.disabled) {
     return;
   }
-  const { controller: { signal }, id } = video;
+  const { controller: { signal }, downloadName } = video;
   button.disabled = true;
   announce(downloadStatus, "Obteniendo el video…");
   try {
@@ -472,8 +521,7 @@ async function downloadVideo(format, button) {
       blob = await convertVideoToMp3(blob, signal);
     }
     if (!signal.aborted) {
-      const name = id ? `frametok-${id}.${format}` : `frametok.${format}`;
-      saveFile(blob, name);
+      saveFile(blob, `${downloadName}.${format}`);
       announce(downloadStatus, format === "mp3" ? "MP3 listo para descargar." : "MP4 listo para descargar.");
     }
   } catch (error) {
