@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Descarga las fotos de un carrusel público de TikTok por separado o juntas en un ZIP.">
+  <meta name="description" content="Descarga carruseles públicos de TikTok y guarda videos en MP4 o su audio en MP3.">
   <meta name="theme-color" content="#090909">
-  <title>Frametok · Fotos de TikTok</title>
+  <title>TikTok FlowLoad</title>
   <link rel="icon" href="./assets/frametok.png" type="image/png">
-  <link rel="stylesheet" href="./styles.css?v=7">
+  <link rel="stylesheet" href="./styles.css?v=8">
   <script defer src="./vendor/jszip.min.js"></script>
-  <script defer src="./app.js?v=3"></script>
+  <script defer src="./app.js?v=4"></script>
 </head>
 <body>
   <main class="page" aria-labelledby="page-title">
@@ -23,11 +23,10 @@
       </header>
 
       <section class="intro" aria-labelledby="page-title">
-        <h1 id="page-title">Fotos de TikTok.</h1>
-        <p class="intro-copy" id="link-help">Guarda las fotos de un carrusel público por separado o en ZIP.</p>
+        <h1 id="page-title">TikTok FlowLoad</h1>
         <form id="link-form">
-          <label class="visually-hidden" for="post-link">Enlace del carrusel</label>
-          <input id="post-link" name="url" type="text" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="https://www.tiktok.com/@usuario/photo/…" aria-describedby="form-status link-help" required>
+          <label class="visually-hidden" for="post-link">Enlace de TikTok</label>
+          <input id="post-link" name="url" type="text" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="https://www.tiktok.com/…" aria-describedby="form-status" required>
           <div class="form-actions">
             <button type="submit" class="button button-primary" id="load-photos"><span>Descargar</span></button>
             <button type="button" class="button" id="paste-link">Pegar enlace</button>
@@ -46,9 +45,13 @@
           </div>
           <a class="publication" id="publication" target="_blank" rel="noreferrer"></a>
         </div>
-        <div class="download-actions">
+        <div class="download-actions" id="carousel-actions">
           <button type="button" class="button" id="download-audio" hidden>Descargar audio</button>
           <button type="button" class="button button-zip" id="download-zip">Descargar fotos en ZIP</button>
+        </div>
+        <div class="download-actions" id="video-actions" hidden>
+          <button type="button" class="button" id="download-mp4">Descargar MP4</button>
+          <button type="button" class="button" id="download-mp3">Descargar MP3</button>
         </div>
       </div>
       <audio id="audio-player" class="audio-player" aria-label="Reproductor del audio del carrusel" controls controlslist="nodownload" crossorigin="anonymous" preload="none" hidden></audio>

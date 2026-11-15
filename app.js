@@ -23,6 +23,10 @@ const AUDIO_EXTENSIONS = new Map([
   ["audio/x-wav", "wav"],
   ["audio/webm", "weba"],
 ]);
+const VIDEO_EXTENSIONS = new Map([
+  ["video/mp4", "mp4"],
+  ["application/mp4", "mp4"],
+]);
 
 const form = document.querySelector("#link-form");
 const input = document.querySelector("#post-link");
@@ -34,11 +38,16 @@ const downloadStatus = document.querySelector("#download-status");
 const audioButton = document.querySelector("#download-audio");
 const audioPlayer = document.querySelector("#audio-player");
 const zipButton = document.querySelector("#download-zip");
+const mp4Button = document.querySelector("#download-mp4");
+const mp3Button = document.querySelector("#download-mp3");
+const carouselActions = document.querySelector("#carousel-actions");
+const videoActions = document.querySelector("#video-actions");
 const photoCount = document.querySelector("#photo-count");
+const galleryTitle = document.querySelector("#gallery-title");
 const publication = document.querySelector("#publication");
 const results = document.querySelector("#results");
 const gallery = document.querySelector("#photo-gallery");
-let activeCarousel;
+let activePublication;
 
 function announce(element, message = "", error = false) {
   element.hidden = !message;
@@ -60,7 +69,7 @@ function getPublicationLink(value) {
   const shareCode = /^\/t\/[\w-]+\/?$/.test(path);
   const shortLink = SHORT_HOSTS.has(link.hostname) && /^\/[\w-]+\/?$/.test(path);
   if (!fullPost && !shareCode && !shortLink) {
-    throw new Error("Copia el enlace de la publicación de fotos desde Compartir en TikTok.");
+    throw new Error("Copia el enlace de la publicación desde Compartir en TikTok.");
   }
 
   link.protocol = "https:";
@@ -92,6 +101,10 @@ function getImageLink(rawLink) {
   return url;
 }
 
+function getMediaLinks(...links) {
+  return [...new Set(links.map(getMediaLink).filter(Boolean))];
+}
+
 function request(url, signal, timeout) {
   return fetch(url, {
     credentials: "omit",
@@ -100,7 +113,7 @@ function request(url, signal, timeout) {
   });
 }
 
-async function loadCarousel(link, signal) {
+async function loadPublication(link, signal) {
   const endpoint = new URL(TIKWM_API);
   endpoint.searchParams.set("url", link);
   const response = await request(endpoint, signal, 25000);
@@ -112,21 +125,31 @@ async function loadCarousel(link, signal) {
   }
   const payload = await response.json();
   if (payload.code !== 0 || !payload.data) {
-    throw new Error("No se encontró la publicación. Comprueba que el enlace abra un carrusel público.");
+    throw new Error("No se encontró la publicación. Comprueba que el enlace abra un carrusel o video público.");
   }
-  const { images, author, id, music, music_info: musicInfo } = payload.data;
-  if (!Array.isArray(images) || images.length === 0) {
-    throw new Error("La publicación no contiene un carrusel de fotos disponible.");
-  }
-  return {
+  const { images, author, id, music, music_info: musicInfo, play, wmplay } = payload.data;
+  const details = {
     id: /^\d+$/.test(String(id)) ? String(id) : "",
     author: typeof author?.unique_id === "string" ? author.unique_id : "",
-    audioLinks: [...new Set([music, musicInfo?.play].map(getMediaLink).filter(Boolean))],
-    photos: images.map((image, index) => ({
-      url: getImageLink(image),
-      number: String(index + 1).padStart(Math.max(2, String(images.length).length), "0"),
-    })),
   };
+  if (Array.isArray(images) && images.length > 0) {
+    return {
+      ...details,
+      type: "carousel",
+      audioLinks: getMediaLinks(music, musicInfo?.play),
+      photos: images.map((image, index) => ({
+        url: getImageLink(image),
+        number: String(index + 1).padStart(Math.max(2, String(images.length).length), "0"),
+      })),
+    };
+  }
+
+  const videoLinks = getMediaLinks(play, wmplay);
+  if (videoLinks.length > 0) {
+    return { ...details, type: "video", videoLinks };
+  }
+
+  throw new Error("No se pudo obtener el contenido de esta publicación. Vuelve a cargarla o prueba otro enlace.");
 }
 
 function getPhotoFile(photo, signal) {
@@ -151,12 +174,12 @@ function getPhotoFile(photo, signal) {
   return photo.file;
 }
 
-async function getAudioFile(links, signal) {
+async function getMediaFile(links, signal, extensions, timeout) {
   for (const link of links) {
     try {
-      const response = await request(link, signal, 45000);
+      const response = await request(link, signal, timeout);
       const mime = response.headers.get("Content-Type")?.split(";")[0].trim().toLowerCase();
-      const extension = AUDIO_EXTENSIONS.get(mime);
+      const extension = extensions.get(mime);
       if (!response.ok || !extension) {
         continue;
       }
@@ -171,7 +194,68 @@ async function getAudioFile(links, signal) {
     }
   }
 
-  throw new Error("No se pudo descargar el audio. Vuelve a cargar el carrusel e inténtalo de nuevo.");
+  return null;
+}
+
+function getVideoBlob(video, signal) {
+  if (!video.file) {
+    video.file = getMediaFile(video.videoLinks, signal, VIDEO_EXTENSIONS, 120000)
+      .then((file) => {
+        if (!file) {
+          throw new Error("No se pudo obtener el video en MP4. Vuelve a cargar la publicación e inténtalo de nuevo.");
+        }
+        return file.blob;
+      })
+      .catch((error) => {
+        delete video.file;
+        throw error;
+      });
+  }
+  return video.file;
+}
+
+async function encodeMp3(audio, signal) {
+  const samples = Array.from({ length: audio.numberOfChannels }, (_, channel) => audio.getChannelData(channel).slice());
+  const worker = new Worker("./mp3-worker.js");
+  let cancel;
+  try {
+    return await new Promise((resolve, reject) => {
+      cancel = () => reject(signal.reason);
+      worker.onmessage = ({ data }) => {
+        if (data instanceof Blob && data.size > 0) {
+          resolve(data);
+        } else {
+          reject(new Error("No se pudo generar el archivo MP3."));
+        }
+      };
+      worker.onerror = () => reject(new Error("No se pudo generar el archivo MP3."));
+      signal.addEventListener("abort", cancel, { once: true });
+      worker.postMessage({ samples, sampleRate: audio.sampleRate }, samples.map((channel) => channel.buffer));
+    });
+  } finally {
+    signal.removeEventListener("abort", cancel);
+    worker.terminate();
+  }
+}
+
+async function convertVideoToMp3(blob, signal) {
+  let audio;
+  try {
+    const decoder = new OfflineAudioContext(2, 1, 44100);
+    audio = await decoder.decodeAudioData(await blob.arrayBuffer());
+    if (audio.numberOfChannels > 2) {
+      const mixer = new OfflineAudioContext(2, audio.length, audio.sampleRate);
+      const source = mixer.createBufferSource();
+      source.buffer = audio;
+      source.connect(mixer.destination);
+      source.start();
+      audio = await mixer.startRendering();
+    }
+  } catch {
+    throw new Error("No se pudo leer la pista de audio de este video.");
+  }
+  signal.throwIfAborted();
+  return encodeMp3(audio, signal);
 }
 
 function saveFile(blob, name) {
@@ -240,11 +324,9 @@ function buildPhotoCard(photo, signal) {
   return card;
 }
 
-function showCarousel({ photos, author, audioLinks, link, controller }) {
+function showCarousel({ photos, audioLinks, controller }) {
   gallery.replaceChildren(...photos.map((photo) => buildPhotoCard(photo, controller.signal)));
   photoCount.textContent = `${photos.length} ${photos.length === 1 ? "foto" : "fotos"}`;
-  publication.href = link;
-  publication.textContent = author ? `@${author} en TikTok` : "Ver en TikTok";
   const hasAudio = audioLinks.length > 0;
   audioButton.hidden = !hasAudio;
   audioButton.disabled = false;
@@ -258,6 +340,23 @@ function showCarousel({ photos, author, audioLinks, link, controller }) {
     audioPlayer.load();
   }
   zipButton.disabled = false;
+}
+
+function showPublication(data) {
+  const isCarousel = data.type === "carousel";
+  galleryTitle.textContent = isCarousel ? "Fotos del carrusel" : "Video de TikTok";
+  photoCount.hidden = !isCarousel;
+  carouselActions.hidden = !isCarousel;
+  videoActions.hidden = isCarousel;
+  gallery.hidden = !isCarousel;
+  publication.href = data.link;
+  publication.textContent = data.author ? `@${data.author} en TikTok` : "Ver en TikTok";
+  if (isCarousel) {
+    showCarousel(data);
+  } else {
+    mp4Button.disabled = false;
+    mp3Button.disabled = false;
+  }
   results.hidden = false;
 }
 
@@ -297,8 +396,8 @@ form.addEventListener("submit", async (event) => {
     return;
   }
 
-  activeCarousel?.controller.abort();
-  activeCarousel = undefined;
+  activePublication?.controller.abort();
+  activePublication = undefined;
   if (!audioPlayer.hidden) {
     audioPlayer.pause();
     audioPlayer.replaceChildren();
@@ -308,15 +407,15 @@ form.addEventListener("submit", async (event) => {
   gallery.replaceChildren();
   results.hidden = true;
   loadButton.disabled = true;
-  loadLabel.textContent = "Preparando fotos…";
+  loadLabel.textContent = "Preparando…";
   input.removeAttribute("aria-invalid");
   announce(formStatus, "Consultando la publicación…");
   announce(downloadStatus);
   const controller = new AbortController();
   try {
-    const data = await loadCarousel(link, controller.signal);
-    activeCarousel = { ...data, link, controller };
-    showCarousel(activeCarousel);
+    const data = await loadPublication(link, controller.signal);
+    activePublication = { ...data, link, controller };
+    showPublication(activePublication);
     announce(formStatus);
   } catch (error) {
     const connectionError = error instanceof TypeError || error.name === "TimeoutError" || error instanceof SyntaxError;
@@ -329,14 +428,18 @@ form.addEventListener("submit", async (event) => {
 });
 
 audioButton.addEventListener("click", async () => {
-  if (!activeCarousel?.audioLinks.length || audioButton.disabled) {
+  if (!activePublication?.audioLinks?.length || audioButton.disabled) {
     return;
   }
-  const { controller: { signal }, audioLinks, id } = activeCarousel;
+  const { controller: { signal }, audioLinks, id } = activePublication;
   audioButton.disabled = true;
   announce(downloadStatus, "Preparando audio…");
   try {
-    const { blob, extension } = await getAudioFile(audioLinks, signal);
+    const file = await getMediaFile(audioLinks, signal, AUDIO_EXTENSIONS, 45000);
+    if (!file) {
+      throw new Error("No se pudo descargar el audio. Vuelve a cargar el carrusel e inténtalo de nuevo.");
+    }
+    const { blob, extension } = file;
     if (!signal.aborted) {
       const name = id ? `frametok-audio-${id}.${extension}` : `frametok-audio.${extension}`;
       saveFile(blob, name);
@@ -353,11 +456,45 @@ audioButton.addEventListener("click", async () => {
   }
 });
 
-zipButton.addEventListener("click", async () => {
-  if (!activeCarousel || zipButton.disabled) {
+async function downloadVideo(format, button) {
+  const video = activePublication;
+  if (video?.type !== "video" || button.disabled) {
     return;
   }
-  const { controller: { signal }, photos, id } = activeCarousel;
+  const { controller: { signal }, id } = video;
+  button.disabled = true;
+  announce(downloadStatus, "Obteniendo el video…");
+  try {
+    let blob = await getVideoBlob(video, signal);
+    signal.throwIfAborted();
+    if (format === "mp3") {
+      announce(downloadStatus, "Convirtiendo el audio a MP3…");
+      blob = await convertVideoToMp3(blob, signal);
+    }
+    if (!signal.aborted) {
+      const name = id ? `frametok-${id}.${format}` : `frametok.${format}`;
+      saveFile(blob, name);
+      announce(downloadStatus, format === "mp3" ? "MP3 listo para descargar." : "MP4 listo para descargar.");
+    }
+  } catch (error) {
+    if (!signal.aborted) {
+      announce(downloadStatus, error.message, true);
+    }
+  } finally {
+    if (!signal.aborted) {
+      button.disabled = false;
+    }
+  }
+}
+
+mp4Button.addEventListener("click", () => downloadVideo("mp4", mp4Button));
+mp3Button.addEventListener("click", () => downloadVideo("mp3", mp3Button));
+
+zipButton.addEventListener("click", async () => {
+  if (activePublication?.type !== "carousel" || zipButton.disabled) {
+    return;
+  }
+  const { controller: { signal }, photos, id } = activePublication;
   zipButton.disabled = true;
   announce(downloadStatus, "Preparando ZIP…");
   try {

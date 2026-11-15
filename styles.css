@@ -122,14 +122,6 @@ h1 {
   line-height: 1.16;
 }
 
-.intro-copy {
-  margin-top: 11px;
-  color: var(--muted);
-  font-size: .93rem;
-  line-height: 1.55;
-  text-wrap: pretty;
-}
-
 #link-form { margin-top: 23px; }
 
 #post-link {
@@ -290,7 +282,6 @@ h2 {
   .page { width: calc(100% - 32px); }
   .masthead { padding-bottom: 15px; }
   .intro { margin-top: 27px; }
-  .intro-copy { font-size: .88rem; }
   .form-actions { gap: 16px; }
   .gallery { grid-template-columns: repeat(auto-fill, minmax(min(100%, 116px), 1fr)); }
 }

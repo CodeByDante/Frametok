@@ -4,6 +4,8 @@ Pega el enlace de una publicación pública de fotos de TikTok para ver las imá
 
 Si el carrusel tiene una pista disponible, puedes escucharla en el reproductor y guardarla por separado con **Descargar audio**.
 
+Para una publicación de video, usa **Descargar MP4** para guardar el video o **Descargar MP3** para convertir su pista de audio en el navegador.
+
 [Abrir Frametok](https://codebydante.github.io/Frametok/)
 
 ## Ejecutar en local
@@ -16,7 +18,7 @@ Abre [localhost en el puerto 8000](http://localhost:8000/) desde el navegador. P
 
 ## Cómo funciona
 
-La interfaz envía a la [API pública de TikWM](https://www.tikwm.com/) el enlace de la publicación, sin sus parámetros de seguimiento. El navegador obtiene las fotos de las direcciones que devuelve la API y [JSZip](https://stuk.github.io/jszip/) arma el archivo ZIP de forma local. Si TikWM limita las consultas o TikTok deja de servir una foto, la aplicación muestra el error y permite reintentar.
+La interfaz envía a la API pública de TikWM el enlace de la publicación, sin sus parámetros de seguimiento. El navegador obtiene los archivos disponibles y crea el ZIP de fotos con JSZip. La conversión del audio de un video a MP3 usa LAME en el navegador. Si el servicio limita las consultas o una publicación deja de estar disponible, la aplicación muestra un error y permite reintentar. [TikWM](https://www.tikwm.com/) · [JSZip](https://stuk.github.io/jszip/) · [Licencia de LAME](vendor/lamejs-LICENSE.txt)
 
 Puedes probar con [este carrusel público de siete fotos](https://www.tiktok.com/@adventurers00/photo/7684712891978665249).
 
