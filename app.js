@@ -42,6 +42,12 @@ const downloadStatus = document.querySelector("#download-status");
 const audioButton = document.querySelector("#download-audio");
 const audioPlayer = document.querySelector("#audio-player");
 const carouselAudio = document.querySelector("#carousel-audio");
+const audioToggle = document.querySelector("#audio-toggle");
+const audioSeek = document.querySelector("#audio-seek");
+const audioCurrent = document.querySelector("#audio-current");
+const audioDuration = document.querySelector("#audio-duration");
+const audioVolume = document.querySelector("#audio-volume");
+const audioStatus = document.querySelector("#audio-status");
 const zipButton = document.querySelector("#download-zip");
 const mp4Button = document.querySelector("#download-mp4");
 const mp3Button = document.querySelector("#download-mp3");
@@ -178,7 +184,9 @@ async function loadPublication(link, signal) {
   if (videoLinks.length > 0) {
     const poster = getMediaLink(cover) ?? getMediaLink(originCover);
     const { hostname, pathname } = new URL(link);
-    const downloadName = safeFileStem(title) || safeFileStem(hostname + pathname);
+    const caption = typeof title === "string" ? title : "";
+    const hasTitle = /[\p{L}\p{N}\p{S}]/u.test(caption.replace(/#[^\s#]*/g, ""));
+    const downloadName = (hasTitle ? safeFileStem(caption) : "") || safeFileStem(hostname + pathname);
     return { ...details, type: "video", videoLinks, poster, downloadName };
   }
 
@@ -375,6 +383,91 @@ function resetPlayer(player, panel) {
   }
 }
 
+function formatAudioTime(seconds) {
+  const totalSeconds = Math.floor(seconds);
+  return `${Math.floor(totalSeconds / 60)}:${String(totalSeconds % 60).padStart(2, "0")}`;
+}
+
+function updateAudioTimeline() {
+  const duration = audioPlayer.duration;
+  const canSeek = Number.isFinite(duration) && duration > 0;
+  const current = canSeek ? Math.min(audioPlayer.currentTime, duration) : 0;
+  const time = formatAudioTime(current);
+  const end = canSeek ? formatAudioTime(duration) : "–:––";
+
+  audioCurrent.textContent = time;
+  audioDuration.textContent = end;
+  audioSeek.disabled = !canSeek;
+  audioSeek.max = String(canSeek ? duration : 1);
+  audioSeek.value = String(current);
+  audioSeek.style.setProperty("--range-progress", `${canSeek ? current / duration * 100 : 0}%`);
+  audioSeek.setAttribute("aria-valuetext", canSeek ? `${time} de ${end}` : time);
+}
+
+function updateAudioToggle() {
+  const playing = !audioPlayer.paused && !audioPlayer.ended;
+  audioToggle.classList.toggle("is-playing", playing);
+  audioToggle.setAttribute("aria-label", playing ? "Pausar audio" : "Reproducir audio");
+}
+
+function updateVideoSize() {
+  const { videoWidth, videoHeight } = videoPlayer;
+  if (activePublication?.type === "video" && videoWidth > 0 && videoHeight > 0) {
+    results.style.setProperty("--video-ratio", String(videoWidth / videoHeight));
+  }
+}
+
+videoPlayer.addEventListener("loadedmetadata", updateVideoSize);
+videoPlayer.addEventListener("resize", updateVideoSize);
+
+for (const event of ["durationchange", "timeupdate", "emptied"]) {
+  audioPlayer.addEventListener(event, updateAudioTimeline);
+}
+
+for (const event of ["play", "pause", "ended", "emptied"]) {
+  audioPlayer.addEventListener(event, updateAudioToggle);
+}
+
+function showAudioPlaybackError() {
+  announce(audioStatus, "No se pudo reproducir el audio. Puedes intentar descargarlo.", true);
+}
+
+audioPlayer.addEventListener("error", (event) => {
+  if (!carouselAudio.hidden && (event.target === audioPlayer || event.target === audioPlayer.lastElementChild)) {
+    audioPlayer.pause();
+    showAudioPlaybackError();
+  }
+}, true);
+
+audioToggle.addEventListener("click", async () => {
+  if (!audioPlayer.paused && !audioPlayer.ended) {
+    audioPlayer.pause();
+    return;
+  }
+  const signal = activePublication?.controller.signal;
+  announce(audioStatus);
+  try {
+    if (audioPlayer.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
+      audioPlayer.load();
+    }
+    await audioPlayer.play();
+  } catch (error) {
+    if (!signal?.aborted && error.name !== "AbortError") {
+      showAudioPlaybackError();
+    }
+  }
+});
+
+audioSeek.addEventListener("input", () => {
+  audioPlayer.currentTime = audioSeek.valueAsNumber;
+  updateAudioTimeline();
+});
+
+audioVolume.addEventListener("input", () => {
+  audioPlayer.volume = audioVolume.valueAsNumber / 100;
+  audioVolume.style.setProperty("--range-progress", `${audioVolume.value}%`);
+});
+
 function showCarousel({ photos, audioLinks, controller }) {
   gallery.replaceChildren(...photos.map((photo, index) => buildPhotoCard(photo, controller.signal, index)));
   photoCount.textContent = `${photos.length} ${photos.length === 1 ? "foto" : "fotos"}`;
@@ -383,12 +476,16 @@ function showCarousel({ photos, audioLinks, controller }) {
   audioButton.disabled = false;
   if (hasAudio) {
     setPlayerSources(audioPlayer, audioLinks);
+    announce(audioStatus);
+    updateAudioTimeline();
+    updateAudioToggle();
   }
   zipButton.disabled = false;
 }
 
 function showPublication(data) {
   const isCarousel = data.type === "carousel";
+  results.dataset.type = data.type;
   galleryTitle.textContent = isCarousel ? "Fotos del carrusel" : "Video de TikTok";
   photoCount.hidden = !isCarousel;
   carouselActions.hidden = !isCarousel;
@@ -450,6 +547,7 @@ form.addEventListener("submit", async (event) => {
   resetPlayer(audioPlayer, carouselAudio);
   resetPlayer(videoPlayer, videoPanel);
   videoPlayer.removeAttribute("poster");
+  results.style.removeProperty("--video-ratio");
   gallery.replaceChildren();
   results.hidden = true;
   loadButton.disabled = true;

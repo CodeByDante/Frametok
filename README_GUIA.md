@@ -4,9 +4,9 @@ Pega el enlace de una publicación pública de TikTok y pulsa **Descargar**. El 
 
 Las fotos de un carrusel aparecen en orden. Puedes guardar cada imagen o reunirlas con **Descargar fotos en ZIP**. Los archivos se numeran como `foto-01.jpg`, `foto-02.jpg` y conservan el formato que entrega el servidor.
 
-Si el carrusel tiene una pista disponible, puedes escucharla en el reproductor y guardarla por separado con **Descargar audio**.
+Si el carrusel tiene una pista disponible, puedes escucharla, avanzar con la barra y ajustar el volumen. Guárdala por separado con **Descargar audio**.
 
-Para una publicación de video, la vista previa aparece encima de **Descargar MP3** y **Descargar MP4**. El MP3 se genera en el navegador a partir del audio del video. Ambos archivos usan el título de la publicación o el enlace si el título falta. La aplicación adapta los caracteres para Windows y limita la longitud del nombre.
+En una publicación de video, el bloque se ajusta a la proporción de la vista previa. Debajo aparecen **Descargar MP3** y **Descargar MP4**. El MP3 se genera en el navegador a partir del audio del video. Ambos archivos usan el título de la publicación o el enlace si el título está vacío o solo tiene hashtags. La aplicación adapta los caracteres para Windows y limita la longitud del nombre.
 
 [Abrir Frametok](https://codebydante.github.io/Frametok/)
 

@@ -12,4 +12,4 @@
 
 **Frametok** permite descargar publicaciones públicas de TikTok. Pega un enlace y pulsa **Descargar** para ver los resultados debajo del formulario.
 
-En los carruseles, guarda cada foto o descárgalas juntas en ZIP. Cuando hay audio disponible, puedes escucharlo y guardarlo aparte. En los videos, la vista previa aparece encima de **Descargar MP3** y **Descargar MP4**. Los archivos usan el título del video o el enlace si falta el título. [Guía de uso](README_GUIA.md)
+En los carruseles, guarda cada foto o descárgalas juntas en ZIP. Cuando hay audio disponible, puedes escucharlo y guardarlo aparte. El bloque de vista previa se adapta a la proporción del video. Los botones **Descargar MP3** y **Descargar MP4** quedan debajo. Los archivos usan el título del video o el enlace cuando el título está vacío o solo tiene hashtags. [Guía de uso](README_GUIA.md)
