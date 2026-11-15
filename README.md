@@ -18,4 +18,4 @@ La interfaz envía a la [API pública de TikWM](https://www.tikwm.com/) el enlac
 
 Puedes probar con [este carrusel público de siete fotos](https://www.tiktok.com/@adventurers00/photo/7684712891978665249).
 
-JSZip e IBM Plex Mono conservan sus licencias en `vendor/JSZip-LICENSE.markdown` y `assets/IBM-Plex-Mono-OFL.txt`.
+JSZip e Inter conservan sus licencias en `vendor/JSZip-LICENSE.markdown` y `assets/Inter-OFL.txt`.
