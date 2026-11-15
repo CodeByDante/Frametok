@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Descarga las fotos de un carrusel público de TikTok por separado o juntas en un ZIP.">
+  <meta name="theme-color" content="#f8f9f3">
+  <title>Carrusel TikTok</title>
+  <link rel="icon" href="./assets/carrusel.png" type="image/png">
+  <link rel="stylesheet" href="./styles.css">
+  <script defer src="./vendor/jszip.min.js"></script>
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="./" aria-label="Carrusel TikTok, inicio">
+        <img src="./assets/carrusel.png" width="36" height="36" alt="">
+        <span>Carrusel <span class="brand-accent">TikTok</span></span>
+      </a>
+      <a class="repository" href="https://github.com/CodeByDante/carrusel-tiktok" target="_blank" rel="noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="intro" aria-labelledby="page-title">
+      <div class="intro-copy">
+        <h1 id="page-title">Descarga fotos<br>de <span>TikTok<span class="title-period">.</span></span></h1>
+        <p>Guarda las fotos de un carrusel público por separado o juntas en un ZIP.</p>
+      </div>
+      <form id="link-form" class="link-panel">
+        <label for="post-link">Enlace del carrusel</label>
+        <div class="link-field">
+          <input id="post-link" name="url" type="text" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="https://www.tiktok.com/@usuario/photo/…" aria-describedby="form-status link-help" required>
+          <button type="button" class="paste-button" id="paste-link">Pegar</button>
+        </div>
+        <button type="submit" class="button button-primary" id="load-photos"><span>Cargar fotos</span><span aria-hidden="true">→</span></button>
+        <p class="status" id="form-status" role="status" hidden></p>
+        <p class="link-help" id="link-help">En TikTok, toca Compartir → Copiar enlace.</p>
+      </form>
+    </section>
+
+    <section class="results" aria-labelledby="gallery-title">
+      <div class="results-heading">
+        <div>
+          <div class="results-title">
+            <h2 id="gallery-title">Fotos del carrusel</h2>
+            <span class="photo-count" id="photo-count" hidden></span>
+          </div>
+          <a class="publication" id="publication" target="_blank" rel="noreferrer" hidden></a>
+        </div>
+        <button type="button" class="button button-zip" id="download-zip" hidden>Descargar todo en ZIP <span aria-hidden="true">↓</span></button>
+      </div>
+      <p class="status" id="download-status" role="status" hidden></p>
+      <div class="empty-gallery" id="empty-gallery">
+        <div class="photo-mark" aria-hidden="true"><span></span></div>
+        <p id="empty-text">Las fotos del carrusel aparecerán aquí.</p>
+      </div>
+      <ul class="gallery" id="photo-gallery" aria-label="Fotos en el orden de la publicación" hidden></ul>
+    </section>
+  </main>
+
+  <footer class="site-footer container">
+    El enlace se consulta con <a href="https://www.tikwm.com/" target="_blank" rel="noreferrer">TikWM</a>. El ZIP se crea en tu navegador.
+  </footer>
+</body>
+</html>
